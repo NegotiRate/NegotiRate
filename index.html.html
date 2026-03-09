@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NegotiRate — Know Your Worth. Stop Getting Lowballed.</title>
+<meta name="description" content="The brand deal rate calculator built for creators. See exactly how much you're being underpaid, get a ready-to-send counter-offer, and never leave money on the table again."/>
+<link rel="canonical" href="https://negotirate.app"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --green: #8aff64;
+    --green-dim: rgba(138,255,100,0.1);
+    --bg: #090909;
+    --bg2: #101010;
+    --bg3: #161616;
+    --border: rgba(255,255,255,0.07);
+    --text: #f0f0f0;
+    --muted: #555;
+    --red: #ef4444;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .ambient {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 65% 35% at 85% -5%, rgba(138,255,100,0.07) 0%, transparent 55%),
+      radial-gradient(ellipse 45% 28% at -5% 95%, rgba(138,255,100,0.04) 0%, transparent 50%);
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 62px;
+    background: rgba(9,9,9,0.88); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  .logo .r { color: var(--green); }
+  .nav-links { display: flex; align-items: center; gap: 28px; }
+  .nav-links a { color: var(--muted); font-size: 14px; font-weight: 500; text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--text); }
+  .btn-nav {
+    background: var(--green); color: #090909;
+    border: none; border-radius: 8px; padding: 9px 20px;
+    font-size: 13px; font-weight: 700; font-family: 'Outfit', sans-serif;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-nav:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(138,255,100,0.28); }
+
+  /* HERO */
+  .hero {
+    position: relative; z-index: 1;
+    max-width: 1100px; margin: 0 auto;
+    padding: 88px 40px 72px;
+    display: flex; flex-direction: row; gap: 64px; align-items: center;
+  }
+  .hero-left { flex: 0 0 50%; min-width: 0; }
+  .hero-right { flex: 0 0 36%; min-width: 0; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--green-dim); border: 1px solid rgba(138,255,100,0.2);
+    border-radius: 20px; padding: 5px 14px; margin-bottom: 22px;
+    font-size: 11px; font-weight: 700; color: var(--green); letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(138,255,100,0.4)}50%{opacity:.6;box-shadow:0 0 0 6px rgba(138,255,100,0)} }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 3.8vw, 52px);
+    font-weight: 800; line-height: 1.05;
+    letter-spacing: -0.02em; color: #fff; margin-bottom: 20px;
+  }
+  .hero h1 .g { color: var(--green); }
+  .hero h1 .strike { position: relative; color: var(--muted); }
+  .hero h1 .strike::after {
+    content: ''; position: absolute; left: 0; right: 0; top: 52%;
+    height: 4px; background: var(--red); transform: rotate(-1.5deg);
+  }
+  .hero-sub { font-size: 15px; line-height: 1.75; color: #666; margin-bottom: 28px; }
+  .hero-sub strong { color: var(--text); font-weight: 600; }
+  .hero-cta { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--green); color: #090909;
+    border: none; border-radius: 10px; padding: 14px 28px;
+    font-size: 15px; font-weight: 800; font-family: 'Outfit', sans-serif;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.01em;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(138,255,100,0.3); }
+  .cta-note { font-size: 12px; color: var(--muted); }
+  .cta-note span { color: var(--green); }
+
+  /* HERO CARD */
+  .hero-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 18px; padding: 24px; position: relative; overflow: hidden;
+    width: 100%; box-sizing: border-box;
+  }
+  .hero-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+  }
+  .card-label { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; color: var(--green); text-transform: uppercase; margin-bottom: 16px; }
+  .card-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; gap: 12px; }
+  .card-row:last-of-type { border-bottom: none; }
+  .card-row .k { color: var(--muted); white-space: nowrap; }
+  .card-row .v { font-weight: 700; color: var(--text); font-family: 'DM Mono', monospace; text-align: right; }
+  .card-row .v.g { color: var(--green); font-size: 17px; font-family: 'DM Mono', monospace; }
+  .card-row .v.r { color: var(--red); font-size: 12px; }
+  .verdict-box {
+    margin-top: 16px; background: rgba(138,255,100,0.07);
+    border: 1px solid rgba(138,255,100,0.18); border-radius: 10px; padding: 13px;
+  }
+  .verdict-box .vl { font-size: 10px; color: var(--green); font-weight: 700; letter-spacing: 0.1em; margin-bottom: 5px; }
+  .verdict-box .vt { font-size: 12px; color: #aaa; line-height: 1.6; }
+
+  /* TICKER */
+  .ticker-wrap {
+    position: relative; z-index: 1;
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    padding: 14px 0; overflow: hidden; background: var(--bg2);
+  }
+  .ticker-track { display: flex; gap: 48px; animation: ticker 24s linear infinite; width: max-content; }
+  @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+  .ticker-item { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .ticker-item .d { color: var(--green); }
+
+  /* SECTIONS */
+  section { position: relative; z-index: 1; }
+  .si { max-width: 1080px; margin: 0 auto; padding: 88px 40px; }
+  .stag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.15em; color: var(--green); text-transform: uppercase; margin-bottom: 14px; }
+  .sh { font-family: 'Syne', sans-serif; font-size: clamp(36px, 5vw, 58px); font-weight: 800; line-height: 1; letter-spacing: -0.03em; color: #fff; margin-bottom: 14px; }
+  .ss { font-size: 16px; color: #666; line-height: 1.7; max-width: 520px; margin-bottom: 52px; margin-left: auto; margin-right: auto; }
+
+  /* TESTIMONIALS */
+  .tg { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; text-align: left; }
+  .tc {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 22px;
+    transition: border-color 0.2s;
+  }
+  .tc:hover { border-color: rgba(138,255,100,0.18); }
+  .stars { color: var(--green); font-size: 13px; margin-bottom: 12px; letter-spacing: 2px; }
+  .ttext { font-size: 13px; color: #999; line-height: 1.75; margin-bottom: 16px; font-style: italic; }
+  .tauth { display: flex; align-items: center; gap: 11px; }
+  .tav { width: 34px; height: 34px; border-radius: 50%; background: var(--green-dim); border: 1px solid rgba(138,255,100,0.2); display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .tname { font-size: 13px; font-weight: 700; color: var(--text); }
+  .thandle { font-size: 11px; color: var(--muted); }
+
+  /* PROBLEM */
+  .pg { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; text-align: left; }
+  .pc { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 26px; transition: border-color 0.2s; }
+  .pc:hover { border-color: rgba(138,255,100,0.16); }
+  .picon { font-size: 26px; margin-bottom: 14px; }
+  .pc h3 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 8px; font-family: 'Syne', sans-serif; }
+  .pc p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .pstat { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; color: var(--green); }
+  .pstat span { font-family: 'Outfit', sans-serif; font-size: 12px; color: var(--muted); display: block; margin-top: 2px; }
+
+  /* HOW IT WORKS */
+  .hg { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; background: var(--border); border-radius: 18px; overflow: hidden; }
+  .hs { background: var(--bg2); padding: 34px 28px; }
+  .snum { font-family: 'Syne', sans-serif; font-size: 64px; font-weight: 800; color: rgba(138,255,100,0.08); line-height: 1; margin-bottom: 14px; }
+  .hs h3 { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 8px; font-family: 'Syne', sans-serif; }
+  .hs p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+  /* FEATURES */
+  .fg { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; align-items: start; }
+  .fl { display: flex; flex-direction: column; gap: 8px; }
+  .fi { display: flex; gap: 14px; align-items: flex-start; padding: 18px; border-radius: 12px; transition: background 0.2s; cursor: default; }
+  .fi:hover { background: var(--bg2); }
+  .ficon { width: 40px; height: 40px; border-radius: 10px; background: var(--green-dim); border: 1px solid rgba(138,255,100,0.14); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .fi h4 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; font-family: 'Syne', sans-serif; }
+  .fi p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .fp { background: var(--bg2); border: 1px solid var(--border); border-radius: 18px; padding: 26px; position: sticky; top: 76px; }
+  .fpl { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: var(--green); text-transform: uppercase; margin-bottom: 18px; }
+  .ob { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+  .obl { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; margin-bottom: 7px; }
+  .obv { font-size: 13px; color: var(--text); line-height: 1.6; }
+  .obv.big { font-family: 'Syne', sans-serif; font-size: 38px; font-weight: 800; color: var(--green); line-height: 1; }
+  .locked { filter: blur(5px); user-select: none; pointer-events: none; opacity: 0.4; }
+  .lock-ov { text-align: center; padding: 18px; border: 1px dashed rgba(138,255,100,0.18); border-radius: 10px; margin-top: 4px; }
+  .lock-ov p { font-size: 13px; color: var(--muted); margin-bottom: 12px; line-height: 1.6; }
+
+  /* PRICING */
+  .prg { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; max-width: 960px; margin: 0 auto 24px; text-align: left; align-items: stretch; }
+  .prc { background: var(--bg2); border: 1px solid var(--border); border-radius: 18px; padding: 32px; position: relative; display: flex; flex-direction: column; }
+  .prc.feat { border-color: var(--green); box-shadow: 0 0 36px rgba(138,255,100,0.08); }
+  .pbadge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--green); color: #090909; font-size: 10px; font-weight: 800; letter-spacing: 0.1em; padding: 3px 14px; border-radius: 20px; text-transform: uppercase; white-space: nowrap; }
+  .pname { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+  .pamount { font-family: 'Outfit', sans-serif; font-size: 48px; font-weight: 700; color: #fff; line-height: 1; letter-spacing: -0.01em; margin-bottom: 4px; }
+  .pamount span { font-size: 15px; color: var(--muted); font-weight: 400; letter-spacing: 0; }
+  .pdesc { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
+  .pdiv { height: 1px; background: var(--border); margin-bottom: 20px; }
+  .pfs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; flex: 1; }
+  .pf { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; color: #bbb; line-height: 1.5; }
+  .pf .ck { color: var(--green); flex-shrink: 0; font-weight: 700; }
+  .pf .cx { color: #2a2a2a; flex-shrink: 0; }
+  .pf.lf { opacity: 0.35; }
+  .pbtn { width: 100%; padding: 13px; border-radius: 9px; font-size: 14px; font-weight: 700; font-family: 'Outfit', sans-serif; cursor: pointer; transition: all 0.2s; }
+  .pbtn.out { background: none; border: 1px solid var(--border); color: var(--muted); }
+  .pbtn.out:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+  .pbtn.sol { background: var(--green); border: none; color: #090909; }
+  .pbtn.sol:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(138,255,100,0.28); }
+  .pbtn.gold { background: linear-gradient(135deg,#f5c842,#e89b20); border: none; color: #090909; }
+
+  /* FAQ */
+  .faq { max-width: 640px; margin: 0 auto; text-align: left; }
+  .fqi { border-bottom: 1px solid var(--border); padding: 20px 0; cursor: pointer; }
+  .fqq { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 600; color: var(--text); gap: 20px; }
+  .fqicon { color: var(--green); font-size: 18px; flex-shrink: 0; transition: transform 0.2s; }
+  .fqa { font-size: 13px; color: var(--muted); line-height: 1.8; max-height: 0; overflow: hidden; transition: max-height 0.3s, padding 0.3s; }
+  .fqi.open .fqa { max-height: 200px; padding-top: 12px; }
+  .fqi.open .fqicon { transform: rotate(45deg); }
+
+  /* FINAL CTA */
+  .fcta { background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .fci { max-width: 640px; margin: 0 auto; padding: 88px 40px; text-align: center; }
+  .fci h2 { font-family: 'Syne', sans-serif; font-size: clamp(42px, 6vw, 72px); font-weight: 800; line-height: 0.95; letter-spacing: -0.03em; color: #fff; margin-bottom: 18px; }
+  .fci h2 .g { color: var(--green); }
+  .fci p { font-size: 16px; color: #666; margin-bottom: 32px; line-height: 1.7; }
+
+  /* FOOTER */
+  footer { padding: 36px 40px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: var(--text); }
+
+  /* FREE CALCULATOR */
+  .ci-wrap { display:flex; flex-direction:column; gap:5px; }
+  .ci-label { font-size:11px; font-weight:700; color:#666; letter-spacing:0.08em; text-transform:uppercase; }
+  .ci {
+    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09);
+    color:#f0f0f0; border-radius:9px; padding:12px 14px;
+    font-size:14px; font-family:'Outfit',sans-serif; outline:none;
+    transition:border-color 0.2s; width:100%; box-sizing:border-box;
+    appearance:none; -webkit-appearance:none;
+  }
+  .ci:focus { border-color:rgba(138,255,100,0.4); }
+  .ci option { background:#111; color:#f0f0f0; }
+  .ldot { width:9px; height:9px; border-radius:50%; background:var(--green); animation:ldot 1.2s ease-in-out infinite; opacity:0.3; }
+  @keyframes ldot { 0%,80%,100%{transform:translateY(0);opacity:0.3} 40%{transform:translateY(-10px);opacity:1} }
+
+  .fu { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .fu.vis { opacity: 1; transform: translateY(0); }
+
+  /* RESPONSIVE */
+  @media(max-width:860px){
+    .hero { flex-direction: column; padding: 60px 20px; gap: 32px; }
+    .hero-left, .hero-right { flex: none; width: 100%; }
+    .pg, .tg { grid-template-columns: 1fr; }
+    .hg { grid-template-columns: 1fr; }
+    .fg { grid-template-columns: 1fr; }
+    .prg { grid-template-columns: 1fr; max-width: 400px; }
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    .si { padding: 60px 20px; }
+    footer { flex-direction: column; gap: 14px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+<div class="ambient"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Negoti<span class="r">Rate</span></div>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#features">Features</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <button class="btn-nav" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">See Pricing</button>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-left">
+    <div class="eyebrow"><div class="pulse"></div>Creator Rate Calculator</div>
+    <h1>STOP GETTING<br><span class="strike">LOWBALLED</span><br><span class="g">BY BRANDS.</span></h1>
+    <p class="hero-sub">Know <strong>exactly how much you're being underpaid</strong>, get a ready-to-send counter-offer, and never leave money on the table again. Built for TikTok, YouTube, and Instagram creators.</p>
+    <div class="hero-cta">
+      <button class="btn-primary" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">See How Much You're Owed →</button>
+      <div class="cta-note">Free to start · <span>No credit card needed</span></div>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-card fu">
+      <div class="card-label">📊 Sample Rate Report</div>
+      <div class="card-row"><span class="k">Platform</span><span class="v">TikTok</span></div>
+      <div class="card-row"><span class="k">Followers</span><span class="v">24,500</span></div>
+      <div class="card-row"><span class="k">Avg Views</span><span class="v">41,000</span></div>
+      <div class="card-row"><span class="k">Engagement</span><span class="v">6.8%</span></div>
+      <div class="card-row"><span class="k">Brand Offered</span><span class="v r">£180 — too low</span></div>
+      <div class="card-row"><span class="k">You're Owed</span><span class="v g">£420 – £680</span></div>
+      <div class="verdict-box">
+        <div class="vl">⚡ Free Preview</div>
+        <div class="vt">You're being underpaid by <strong style="color:#8aff64">57%</strong>. Unlock your full report to see the exact rate, counter-offer email, and negotiation scripts.</div>
+      </div>
+      <div style="margin-top:14px;background:rgba(255,255,255,0.03);border:1px dashed rgba(138,255,100,0.15);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:#555;margin-bottom:8px;letter-spacing:0.05em">LOCKED — FULL REPORT</div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <span style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:4px 10px;font-size:11px;color:#444">✉️ Counter-offer email</span>
+          <span style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:4px 10px;font-size:11px;color:#444">💬 Scripts</span>
+          <span style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:4px 10px;font-size:11px;color:#444">🚩 Red flags</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-track">
+    <div class="ticker-item"><span class="d">▸</span>See exactly how much you're underpaid</div>
+    <div class="ticker-item"><span class="d">▸</span>Ready-to-send counter-offer email</div>
+    <div class="ticker-item"><span class="d">▸</span>Negotiation scripts for every pushback</div>
+    <div class="ticker-item"><span class="d">▸</span>Exclusivity & usage rights pricing</div>
+    <div class="ticker-item"><span class="d">▸</span>Red flag detection in brand briefs</div>
+    <div class="ticker-item"><span class="d">▸</span>Works for TikTok, YouTube, Instagram</div>
+    <div class="ticker-item"><span class="d">▸</span>negotirate.app</div>
+    <div class="ticker-item"><span class="d">▸</span>See exactly how much you're underpaid</div>
+    <div class="ticker-item"><span class="d">▸</span>Ready-to-send counter-offer email</div>
+    <div class="ticker-item"><span class="d">▸</span>Negotiation scripts for every pushback</div>
+    <div class="ticker-item"><span class="d">▸</span>Exclusivity & usage rights pricing</div>
+    <div class="ticker-item"><span class="d">▸</span>Red flag detection in brand briefs</div>
+    <div class="ticker-item"><span class="d">▸</span>Works for TikTok, YouTube, Instagram</div>
+    <div class="ticker-item"><span class="d">▸</span>negotirate.app</div>
+  </div>
+</div>
+
+<!-- FREE CALCULATOR HOOK -->
+<section id="try" style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="si" style="max-width:680px">
+    <div class="stag fu">Free Tool</div>
+    <h2 class="sh fu">Find out right now.</h2>
+    <p class="ss fu" style="margin-bottom:32px">Enter your real stats and what the brand offered. We'll calculate exactly how much you're being underpaid — free, using live AI analysis.</p>
+
+    <div id="calc-form">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="ci-wrap">
+          <label class="ci-label">Platform</label>
+          <select id="c-platform" class="ci">
+            <option value="" disabled selected>Select…</option>
+            <option>TikTok</option><option>Instagram Reels</option><option>Instagram Feed</option>
+            <option>YouTube</option><option>Twitter/X</option>
+          </select>
+        </div>
+        <div class="ci-wrap">
+          <label class="ci-label">Your Niche</label>
+          <select id="c-niche" class="ci">
+            <option value="" disabled selected>Select…</option>
+            <option>Beauty & Skincare</option><option>Fashion & Style</option><option>Fitness & Health</option>
+            <option>Gaming</option><option>Finance & Investing</option><option>Tech & Gadgets</option>
+            <option>Food & Cooking</option><option>Travel</option><option>Lifestyle</option>
+            <option>Entertainment & Comedy</option><option>Education</option><option>Other</option>
+          </select>
+        </div>
+        <div class="ci-wrap">
+          <label class="ci-label">Followers</label>
+          <input id="c-followers" class="ci" type="number" placeholder="e.g. 24500"/>
+        </div>
+        <div class="ci-wrap">
+          <label class="ci-label">Avg Views Per Post</label>
+          <input id="c-views" class="ci" type="number" placeholder="e.g. 41000"/>
+        </div>
+        <div class="ci-wrap">
+          <label class="ci-label">Engagement Rate %</label>
+          <input id="c-eng" class="ci" type="number" placeholder="e.g. 6.8" step="0.1"/>
+        </div>
+        <div class="ci-wrap">
+          <label class="ci-label">Brand's Offer (£)</label>
+          <input id="c-offer" class="ci" type="number" placeholder="e.g. 180"/>
+        </div>
+      </div>
+
+      <!-- EMAIL GATE -->
+      <div style="margin-bottom:12px;background:rgba(138,255,100,0.04);border:1px solid rgba(138,255,100,0.14);border-radius:10px;padding:16px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <label class="ci-label" style="display:block;margin-bottom:5px">Your Email — results sent here too</label>
+          <input id="c-email" class="ci" type="email" placeholder="you@example.com" style="margin:0"/>
+        </div>
+        <div style="font-size:11px;color:#3a3a3a;max-width:160px;line-height:1.5">We'll also send you your result so you don't lose it. No spam.</div>
+      </div>
+
+      <button id="calc-btn" onclick="runCalc()" style="
+        width:100%;background:var(--green);border:none;color:#090909;
+        border-radius:10px;padding:16px;font-size:15px;font-weight:800;
+        font-family:'Outfit',sans-serif;cursor:pointer;transition:all 0.2s;
+        letter-spacing:0.01em;margin-bottom:8px">
+        Show Me How Much I'm Being Underpaid →
+      </button>
+      <p style="text-align:center;font-size:11px;color:#3a3a3a">Free · Real AI analysis · No spam ever</p>
+      <div id="calc-error" style="display:none;margin-top:12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:12px;color:#f87171;font-size:13px"></div>
+    </div>
+
+    <!-- LOADING STATE -->
+    <div id="calc-loading" style="display:none;text-align:center;padding:48px 0">
+      <div style="display:flex;justify-content:center;gap:6px;margin-bottom:20px">
+        <div class="ldot"></div><div class="ldot" style="animation-delay:0.15s"></div>
+        <div class="ldot" style="animation-delay:0.3s"></div><div class="ldot" style="animation-delay:0.45s"></div>
+        <div class="ldot" style="animation-delay:0.6s"></div>
+      </div>
+      <p style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:8px">Analysing your deal…</p>
+      <p id="calc-loading-msg" style="font-size:13px;color:var(--green);font-weight:600">Benchmarking against your niche…</p>
+    </div>
+
+    <!-- RESULT STATE -->
+    <div id="calc-result" style="display:none">
+      <div id="res-lowball" style="border-radius:16px;padding:36px;text-align:center;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:700;letter-spacing:0.12em;color:#888;text-transform:uppercase;margin-bottom:12px">You are being underpaid by</div>
+        <div id="res-pct" style="font-family:'Syne',sans-serif;font-size:80px;font-weight:800;line-height:1;margin-bottom:8px"></div>
+        <div id="res-gap" style="font-family:'DM Mono',monospace;font-size:22px;font-weight:500;margin-bottom:16px"></div>
+        <div id="res-headline" style="font-size:15px;color:#bbb;line-height:1.6;max-width:460px;margin:0 auto"></div>
+      </div>
+
+      <!-- LOCKED TEASER -->
+      <div style="background:rgba(138,255,100,0.04);border:1px solid rgba(138,255,100,0.15);border-radius:14px;padding:24px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px">🔒 Unlock your full report — £9.99</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px;filter:blur(3px)">
+            <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Your Exact Rate</div>
+            <div style="font-family:'DM Mono',monospace;font-size:20px;color:var(--green);font-weight:500">£??? – £???</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px;filter:blur(3px)">
+            <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Counter-Offer Email</div>
+            <div style="font-size:12px;color:#777;line-height:1.5">Hi [Brand], after reviewing your brief I'd like to propose £— for this campaign…</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+          <span style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:5px 12px;font-size:12px;color:#444">💬 4 negotiation scripts</span>
+          <span style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:5px 12px;font-size:12px;color:#444">🚩 Red flag scanner</span>
+          <span style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:5px 12px;font-size:12px;color:#444">➕ Extras pricing</span>
+        </div>
+        <button onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})" style="width:100%;background:linear-gradient(135deg,#8aff64,#4dc840);border:none;color:#090909;border-radius:10px;padding:14px;font-size:15px;font-weight:800;font-family:'Outfit',sans-serif;cursor:pointer">
+          Unlock Full Report — £9.99
+        </button>
+        <p style="text-align:center;font-size:11px;color:#3a3a3a;margin-top:8px">Or £19.99/mo for unlimited · £149 lifetime deal</p>
+      </div>
+
+      <button onclick="resetCalc()" style="width:100%;background:none;border:1px solid rgba(255,255,255,0.08);color:#555;border-radius:9px;padding:11px;font-size:13px;font-family:'Outfit',sans-serif;cursor:pointer">
+        ← Try different stats
+      </button>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="si">
+    <div class="stag fu">Social Proof</div>
+    <h2 class="sh fu">Creators already getting paid more.</h2>
+    <p class="ss fu">Real results from real creators who stopped guessing.</p>
+    <div class="tg">
+      <div class="tc fu">
+        <div class="stars">★★★★★</div>
+        <p class="ttext">"I was about to accept £200 for a sponsored post. NegotiRate told me my real rate was £480. I countered, they accepted immediately. The tool paid for itself 40× in one deal."</p>
+        <div class="tauth"><div class="tav">🎮</div><div><div class="tname">Jamie K.</div><div class="thandle">Gaming creator · 31K TikTok</div></div></div>
+      </div>
+      <div class="tc fu">
+        <div class="stars">★★★★★</div>
+        <p class="ttext">"I didn't know exclusivity was worth extra money. The red flag scanner flagged a 90-day exclusivity clause I almost signed for free. Saved me from turning down £1,200 in other deals."</p>
+        <div class="tauth"><div class="tav">💄</div><div><div class="tname">Priya M.</div><div class="thandle">Beauty creator · 58K Instagram</div></div></div>
+      </div>
+      <div class="tc fu">
+        <div class="stars">★★★★★</div>
+        <p class="ttext">"The counter-offer email is the best bit. I used to spend 30 minutes drafting these. Now I copy, edit the name, send. Brand replied within the hour and met my rate."</p>
+        <div class="tauth"><div class="tav">🏋️</div><div><div class="tname">Marcus T.</div><div class="thandle">Fitness creator · 22K YouTube</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="si">
+    <div class="stag fu">The Problem</div>
+    <h2 class="sh fu">Every creator leaves<br>money on the table.</h2>
+    <p class="ss fu">Brands know what fair rates look like. Most creators don't. That's not an accident.</p>
+    <div class="pg">
+      <div class="pc fu"><div class="picon">😤</div><h3>You're guessing your rate</h3><p>Generic calculators give ballpark numbers with zero context. They don't know your niche, your engagement, or what that brand actually budgeted.</p><div class="pstat">76%<span>of creators undercharge on their first brand deal</span></div></div>
+      <div class="pc fu"><div class="picon">📩</div><h3>You don't know how to negotiate</h3><p>Brands lowball and wait. Most creators accept it because they have no counter-offer ready and don't want to seem difficult.</p><div class="pstat">£800+<span>average left on the table per deal by mid-size creators</span></div></div>
+      <div class="pc fu"><div class="picon">🚩</div><h3>You miss the expensive extras</h3><p>Exclusivity clauses. Usage rights. Rush fees. Most creators don't know these should cost more — and brands never volunteer to say so.</p><div class="pstat">3×<span>more value hidden in contract extras than the base post fee</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="si">
+    <div class="stag fu">How It Works</div>
+    <h2 class="sh fu">Your rate in 60 seconds.</h2>
+    <p class="ss fu">Three inputs. One sharp answer. Everything you need to reply to that brand with confidence.</p>
+    <div class="hg fu">
+      <div class="hs"><div class="snum">01</div><h3>Enter your stats</h3><p>Platform, followers, average views, engagement rate, niche. 30 seconds. No account needed.</p></div>
+      <div class="hs"><div class="snum">02</div><h3>Paste the brief</h3><p>Drop in what they're asking for — deliverables, exclusivity, deadline, what they offered. More context = sharper report.</p></div>
+      <div class="hs"><div class="snum">03</div><h3>See what you're owed</h3><p>Free: see exactly how much you're being underpaid. Unlock: get your counter-offer email, scripts, and red flag analysis.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="si">
+    <div class="stag fu">What You Get</div>
+    <h2 class="sh fu">Not just a number.<br>A full negotiation kit.</h2>
+    <p class="ss fu">Every piece of information you need to walk into a brand deal and come out paid fairly.</p>
+    <div class="fg">
+      <div class="fl">
+        <div class="fi fu"><div class="ficon">📉</div><div><h4>Underpayment Gap (Free)</h4><p>See exactly how much below fair value the offer is — as a percentage and a £ amount. The number that makes you act.</p></div></div>
+        <div class="fi fu"><div class="ficon">💰</div><div><h4>Personalised Rate Range</h4><p>Your exact low and high rate based on platform, niche, engagement, and market data — not generic averages.</p></div></div>
+        <div class="fi fu"><div class="ficon">📧</div><div><h4>Counter-Offer Email</h4><p>Professional, ready-to-send. Backed by your numbers. Just edit the name and hit send.</p></div></div>
+        <div class="fi fu"><div class="ficon">💬</div><div><h4>Negotiation Scripts</h4><p>Exact words for when they push back, go silent, or try to add deliverables without extra pay.</p></div></div>
+        <div class="fi fu"><div class="ficon">🚩</div><div><h4>Red Flag Scanner</h4><p>Catches bad exclusivity clauses, usage rights grabs, and sneaky terms brands hope you won't spot.</p></div></div>
+      </div>
+      <div class="fp fu">
+        <div class="fpl">Sample output — free tier</div>
+        <div class="ob"><div class="obl">You're being underpaid by</div><div class="obv big">57%</div></div>
+        <div class="ob"><div class="obl">Gap in £</div><div class="obv" style="color:var(--red);font-weight:700;font-size:16px">£230–£410 below fair value</div></div>
+        <div class="ob"><div class="obl">Brand Offered</div><div class="obv">£180 — counter immediately</div></div>
+        <div class="ob locked"><div class="obl">Your Exact Rate Range</div><div class="obv">£420 – £680</div></div>
+        <div class="ob locked"><div class="obl">Counter-Offer Email</div><div class="obv">Hi [Name], thank you for reaching out. After reviewing the brief I'd love to move forward at £550...</div></div>
+        <div class="lock-ov">
+          <p>Exact rate, counter-offer email, scripts & red flags — unlock with a full report</p>
+          <button class="pbtn sol" style="width:auto;padding:10px 22px;font-size:13px" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Unlock Report — £9.99</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="si" style="text-align:center">
+    <div class="stag fu">Pricing</div>
+    <h2 class="sh fu">Pays for itself the first time you use it.</h2>
+    <p class="ss fu" style="margin:0 auto 52px">One extra £50 on a brand deal covers months of unlimited reports. The maths is easy.</p>
+    <div class="prg">
+
+      <!-- FREE -->
+      <div class="prc fu">
+        <div class="pname">Free</div>
+        <div class="pamount">£0<span> forever</span></div>
+        <div class="pdesc">See how much you're being underpaid. No card, no account.</div>
+        <div class="pdiv"></div>
+        <div class="pfs">
+          <div class="pf"><span class="ck">✓</span>Enter your stats & brand offer</div>
+          <div class="pf"><span class="ck">✓</span>See your underpayment % and £ gap</div>
+          <div class="pf"><span class="ck">✓</span>Powered by live AI analysis</div>
+          <div class="pf lf"><span class="cx">✗</span>Exact rate range</div>
+          <div class="pf lf"><span class="cx">✗</span>Counter-offer email</div>
+          <div class="pf lf"><span class="cx">✗</span>Negotiation scripts</div>
+          <div class="pf lf"><span class="cx">✗</span>Red flag scanner</div>
+        </div>
+        <button class="pbtn out" onclick="document.getElementById('try').scrollIntoView({behavior:'smooth'})">Try It Free →</button>
+      </div>
+
+      <!-- PAY PER REPORT -->
+      <div class="prc fu">
+        <div class="pname">Pay Per Report</div>
+        <div class="pamount">£25<span> / report</span></div>
+        <div class="pdesc">A deal just landed. Pay once, get everything you need to counter it.</div>
+        <div class="pdiv"></div>
+        <div class="pfs">
+          <div class="pf"><span class="ck">✓</span>Full personalised rate range</div>
+          <div class="pf"><span class="ck">✓</span>Underpayment gap & verdict</div>
+          <div class="pf"><span class="ck">✓</span>Ready-to-send counter-offer email</div>
+          <div class="pf"><span class="ck">✓</span>2 negotiation scripts</div>
+          <div class="pf"><span class="ck">✓</span>Red flag scanner</div>
+          <div class="pf"><span class="ck">✓</span>Extras & add-on pricing</div>
+          <div class="pf lf"><span class="cx">✗</span>Unlimited reports</div>
+        </div>
+        <button class="pbtn sol">Get Full Report — £25</button>
+      </div>
+
+      <!-- UNLIMITED -->
+      <div class="prc feat fu">
+        <div class="pbadge">Most Popular</div>
+        <div class="pname">Unlimited Monthly</div>
+        <div class="pamount">£20<span>/mo</span></div>
+        <div class="pdesc">Multiple deals every month. Every feature, unlimited reports.</div>
+        <div class="pdiv"></div>
+        <div class="pfs">
+          <div class="pf"><span class="ck">✓</span>Full personalised rate range</div>
+          <div class="pf"><span class="ck">✓</span>Underpayment gap & verdict</div>
+          <div class="pf"><span class="ck">✓</span>Ready-to-send counter-offer email</div>
+          <div class="pf"><span class="ck">✓</span>All 4 negotiation scripts</div>
+          <div class="pf"><span class="ck">✓</span>Red flag scanner</div>
+          <div class="pf"><span class="ck">✓</span>Extras & add-on pricing</div>
+          <div class="pf"><span class="ck">✓</span>Unlimited reports every month</div>
+          <div class="pf"><span class="ck">✓</span>Full report history saved</div>
+        </div>
+        <button class="pbtn sol">Start Unlimited — £20/mo</button>
+      </div>
+
+    </div>
+
+    <!-- LIFETIME SOLD OUT BAR -->
+    <div style="max-width:960px;margin:0 auto;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:20px 28px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <span style="font-size:13px;font-weight:700;color:#2a2a2a;text-decoration:line-through">Lifetime Access — £149</span>
+        <span style="background:rgba(239,68,68,0.1);color:#ef4444;font-size:10px;font-weight:800;letter-spacing:0.1em;padding:3px 10px;border-radius:4px;text-transform:uppercase">Sold Out</span>
+        <span style="font-size:13px;color:#444">Lifetime spots are gone. Get notified if we release more.</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+        <input id="lifetime-email" type="email" placeholder="your@email.com" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#f0f0f0;border-radius:7px;padding:9px 14px;font-size:13px;font-family:'Outfit',sans-serif;outline:none;width:220px"/>
+        <button onclick="notifyMe()" id="notify-btn" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#aaa;border-radius:7px;padding:9px 18px;font-size:13px;font-family:'Outfit',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap">Notify Me</button>
+      </div>
+      <div id="notify-confirm" style="display:none;font-size:12px;color:var(--green);font-weight:600;width:100%">✓ You're on the list — we'll let you know first.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" style="background:var(--bg2);border-top:1px solid var(--border)">
+  <div class="si" style="text-align:center">
+    <div class="stag fu">FAQ</div>
+    <h2 class="sh fu">Questions answered.</h2>
+    <div style="height:36px"></div>
+    <div class="faq">
+      <div class="fqi" onclick="this.classList.toggle('open')">
+        <div class="fqq">How accurate are the rates? <span class="fqicon">+</span></div>
+        <div class="fqa">Rates are calculated using your real engagement data plus current market benchmarks by platform and niche. They're a strong, personalised guide — consistently more accurate than any generic calculator because they factor in your specific stats.</div>
+      </div>
+      <div class="fqi" onclick="this.classList.toggle('open')">
+        <div class="fqq">What platforms does it support? <span class="fqicon">+</span></div>
+        <div class="fqa">TikTok, Instagram (Reels, feed posts, Stories), YouTube (integrations and dedicated videos), Twitter/X, and Twitch. More platforms added based on user requests.</div>
+      </div>
+      <div class="fqi" onclick="this.classList.toggle('open')">
+        <div class="fqq">Will brands be annoyed if I use the counter-offer email? <span class="fqicon">+</span></div>
+        <div class="fqa">No — brands expect negotiation, it's built into their process. A professional, data-backed counter-offer actually increases how seriously they take you. The email is firm and respectful, never aggressive.</div>
+      </div>
+      <div class="fqi" onclick="this.classList.toggle('open')">
+        <div class="fqq">Do I need a minimum follower count? <span class="fqicon">+</span></div>
+        <div class="fqa">No. NegotiRate works from 1,000 followers upward. Micro-creators often get the worst deals because they assume their rates should be low — this tool corrects that assumption with data.</div>
+      </div>
+      <div class="fqi" onclick="this.classList.toggle('open')">
+        <div class="fqq">Can I cancel the monthly plan anytime? <span class="fqicon">+</span></div>
+        <div class="fqa">Yes, cancel anytime from your account with no awkward flows. You keep access until the end of your billing period.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<div class="fcta">
+  <div class="fci">
+    <h2>KNOW YOUR <span class="g">WORTH.</span><br>GET PAID IT.</h2>
+    <p>The next brand deal lands in your inbox any day. Will you know what you're owed?</p>
+    <button class="btn-primary" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">See How Much You're Owed →</button>
+    <div style="margin-top:12px;font-size:12px;color:var(--muted)">negotirate.app</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="logo">Negoti<span class="r">Rate</span></div>
+  <div>Built for creators who are done getting lowballed.</div>
+  <div style="display:flex;gap:20px">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="mailto:hello@negotirate.app">Contact</a>
+  </div>
+</footer>
+
+<script>
+  // Fade-up — no DOMContentLoaded needed, script is at bottom
+  const obs = new IntersectionObserver(e => e.forEach(el => {
+    if(el.isIntersecting) el.target.classList.add('vis');
+  }), { threshold: 0, rootMargin: '0px 0px -10px 0px' });
+  document.querySelectorAll('.fu').forEach(el => obs.observe(el));
+  // Immediately show anything already in viewport
+  document.querySelectorAll('.fu').forEach(el => {
+    const r = el.getBoundingClientRect();
+    if(r.top < window.innerHeight) el.classList.add('vis');
+  });
+
+  // Formspree — replace YOUR_FORM_ID with your actual ID
+  const FORMSPREE_URL = 'https://formspree.io/f/YOUR_FORM_ID';
+
+  // Live email validation
+  const emailEl = document.getElementById('c-email');
+  if(emailEl) {
+    emailEl.addEventListener('blur', function() {
+      const v = this.value.trim();
+      this.style.borderColor = (v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) ? 'rgba(239,68,68,0.6)' : '';
+    });
+    emailEl.addEventListener('input', function() {
+      if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value.trim())) {
+        this.style.borderColor = 'rgba(138,255,100,0.4)';
+        document.getElementById('calc-error').style.display = 'none';
+      } else { this.style.borderColor = ''; }
+    });
+  }
+
+  function notifyMe() {
+    const email = document.getElementById('lifetime-email').value;
+    if(!email || !email.includes('@')) {
+      document.getElementById('lifetime-email').style.borderColor = 'rgba(239,68,68,0.5)'; return;
+    }
+    fetch(FORMSPREE_URL, {
+      method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify({email, type:'lifetime_notify', source:'negotirate.app pricing'})
+    }).catch(()=>{});
+    document.getElementById('notify-btn').style.display = 'none';
+    document.getElementById('lifetime-email').style.display = 'none';
+    document.getElementById('notify-confirm').style.display = 'block';
+  }
+
+  function resetCalc() {
+    document.getElementById('calc-form').style.display = 'block';
+    document.getElementById('calc-result').style.display = 'none';
+    document.getElementById('calc-error').style.display = 'none';
+  }
+
+  const LOAD_MSGS = ["Reading your stats…","Benchmarking against your niche…","Calculating fair market rate…","Comparing to brand offer…","Finalising your result…"];
+  let msgIdx = 0, msgTimer = null;
+
+  async function submitEmail(email, platform, niche, followers, eng, offer, pct, gap) {
+    try {
+      await fetch(FORMSPREE_URL, {
+        method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body: JSON.stringify({ email, platform, niche, followers, engagement: eng+'%',
+          offer: offer ? '£'+offer : 'not provided',
+          underpaid_pct: pct ? pct+'%' : 'N/A', underpaid_gap: gap||'N/A',
+          source:'negotirate.app free calculator', submitted_at: new Date().toISOString() })
+      });
+    } catch(e) {}
+  }
+
+  async function runCalc() {
+    const platform  = document.getElementById('c-platform').value;
+    const niche     = document.getElementById('c-niche').value;
+    const followers = document.getElementById('c-followers').value;
+    const views     = document.getElementById('c-views').value;
+    const eng       = document.getElementById('c-eng').value;
+    const offer     = document.getElementById('c-offer').value;
+    const email     = document.getElementById('c-email').value.trim();
+    const errEl     = document.getElementById('calc-error');
+    errEl.style.display = 'none';
+
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if(!emailValid) {
+      document.getElementById('c-email').style.borderColor = 'rgba(239,68,68,0.6)';
+      document.getElementById('c-email').focus();
+      errEl.textContent = 'Please enter a valid email address to see your results.';
+      errEl.style.display = 'block'; return;
+    }
+    document.getElementById('c-email').style.borderColor = '';
+    if(!platform || !niche || !followers || !eng) {
+      errEl.textContent = 'Please fill in platform, niche, followers, and engagement rate.';
+      errEl.style.display = 'block'; return;
+    }
+    if(offer && parseFloat(offer) <= 0) {
+      errEl.textContent = 'Enter a valid offer amount, or leave it blank.';
+      errEl.style.display = 'block'; return;
+    }
+
+    document.getElementById('calc-form').style.display = 'none';
+    document.getElementById('calc-loading').style.display = 'block';
+    document.getElementById('calc-result').style.display = 'none';
+    msgIdx = 0;
+    document.getElementById('calc-loading-msg').textContent = LOAD_MSGS[0];
+    msgTimer = setInterval(()=>{
+      msgIdx = Math.min(msgIdx+1, LOAD_MSGS.length-1);
+      document.getElementById('calc-loading-msg').textContent = LOAD_MSGS[msgIdx];
+    }, 1400);
+
+    const PROMPT = `You are a precise brand deal rate calculator for content creators.
+Calculate fair market rate and underpayment based on these benchmarks:
+- TikTok CPM: £15-35/1000 views | Instagram Reels: £18-40/1000 views | YouTube: £25-60/1000 views | Instagram Feed: £12-28/1000 followers
+- Engagement multipliers: under 2% = 0.7x | 2-4% = 1x | 4-7% = 1.4x | 7%+ = 1.8x
+- Niche multipliers: Finance/Tech = 1.5x | Fitness = 1.3x | Beauty/Fashion = 1.2x | Gaming = 1.1x | Lifestyle = 1.0x | Entertainment = 0.9x
+
+Creator: Platform: ${platform}, Niche: ${niche}, Followers: ${followers}, Avg views: ${views||'not provided'}, Engagement: ${eng}%, Brand offer: ${offer?'£'+offer:'not provided'}
+
+Respond ONLY with raw JSON, no markdown:
+{"rate_low":number,"rate_high":number,"rate_recommended":number,"underpaid_pct":number,"underpaid_amount_low":number,"underpaid_amount_high":number,"verdict":"lowball"|"fair"|"strong"|"no_offer","one_line":"one sharp sentence about this deal"}`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:400, messages:[{role:'user',content:PROMPT}] })
+      });
+      if(!res.ok) throw new Error('API '+res.status);
+      const data = await res.json();
+      const raw = data.content.map(b=>b.text||'').join('').trim().replace(/^```json\n?/,'').replace(/\n?```$/,'').trim();
+      const r = JSON.parse(raw);
+      const gapStr = r.underpaid_amount_low && r.underpaid_amount_high
+        ? '£'+Math.round(r.underpaid_amount_low).toLocaleString()+' – £'+Math.round(r.underpaid_amount_high).toLocaleString() : 'N/A';
+      submitEmail(email, platform, niche, followers, eng, offer, Math.round(r.underpaid_pct), gapStr);
+      clearInterval(msgTimer);
+      document.getElementById('calc-loading').style.display = 'none';
+      showResult(r, offer);
+    } catch(err) {
+      clearInterval(msgTimer);
+      document.getElementById('calc-loading').style.display = 'none';
+      document.getElementById('calc-form').style.display = 'block';
+      errEl.textContent = 'Something went wrong. Please try again.';
+      errEl.style.display = 'block';
+    }
+  }
+
+  function showResult(r, offer) {
+    const box   = document.getElementById('res-lowball');
+    const pctEl = document.getElementById('res-pct');
+    const gapEl = document.getElementById('res-gap');
+    const hlEl  = document.getElementById('res-headline');
+
+    if(r.verdict==='no_offer') {
+      box.style.cssText = 'background:rgba(138,255,100,0.06);border:1px solid rgba(138,255,100,0.2);border-radius:16px;padding:36px;text-align:center;margin-bottom:16px';
+      pctEl.style.cssText = 'font-family:Syne,sans-serif;font-size:48px;font-weight:800;color:#8aff64;line-height:1;margin-bottom:8px';
+      pctEl.textContent = 'Rate Ready';
+      gapEl.style.cssText = 'font-family:DM Mono,monospace;font-size:20px;color:#8aff64;margin-bottom:16px';
+      gapEl.textContent = '£'+r.rate_low.toLocaleString()+' – £'+r.rate_high.toLocaleString();
+      hlEl.textContent = r.one_line+' Unlock your full report for the exact rate, counter-offer email, and scripts.';
+    } else if(r.verdict==='strong') {
+      box.style.cssText = 'background:rgba(138,255,100,0.06);border:1px solid rgba(138,255,100,0.2);border-radius:16px;padding:36px;text-align:center;margin-bottom:16px';
+      pctEl.style.cssText = 'font-family:Syne,sans-serif;font-size:48px;font-weight:800;color:#8aff64;line-height:1;margin-bottom:8px';
+      pctEl.textContent = 'Strong offer';
+      gapEl.style.cssText = 'font-family:DM Mono,monospace;font-size:18px;color:#8aff64;margin-bottom:16px';
+      gapEl.textContent = '£'+r.rate_low.toLocaleString()+' – £'+r.rate_high.toLocaleString()+' fair range';
+      hlEl.textContent = r.one_line+' Check the contract terms — exclusivity and usage rights could still cost you.';
+    } else {
+      const pct = Math.round(r.underpaid_pct);
+      const low = Math.round(r.underpaid_amount_low);
+      const high = Math.round(r.underpaid_amount_high);
+      box.style.cssText = 'background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:16px;padding:36px;text-align:center;margin-bottom:16px';
+      pctEl.style.cssText = 'font-family:Syne,sans-serif;font-size:80px;font-weight:800;line-height:1;margin-bottom:8px;background:linear-gradient(135deg,#ff6b6b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent';
+      pctEl.textContent = pct+'%';
+      gapEl.style.cssText = 'font-family:DM Mono,monospace;font-size:22px;color:#ef4444;font-weight:500;margin-bottom:16px';
+      gapEl.textContent = '£'+low.toLocaleString()+' – £'+high.toLocaleString()+' below fair value';
+      hlEl.style.cssText = 'font-size:15px;color:#bbb;line-height:1.6;max-width:460px;margin:0 auto';
+      hlEl.textContent = r.one_line+' Unlock your full report to get the counter-offer email and scripts to fix this.';
+    }
+    document.getElementById('calc-result').style.display = 'block';
+  }
+</script>
+</body>
+</html>
