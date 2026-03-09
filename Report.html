@@ -1,1 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NegotiRate — Your Full Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --green: #8aff64; --green-dim: rgba(138,255,100,0.1);
+    --bg: #090909; --bg2: #101010; --bg3: #161616;
+    --border: rgba(255,255,255,0.07); --text: #f0f0f0; --muted: #555; --red: #ef4444;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; -webkit-font-smoothing: antialiased; }
+  .ambient { position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: radial-gradient(ellipse 65% 35% at 85% -5%, rgba(138,255,100,0.07) 0%, transparent 55%),
+      radial-gradient(ellipse 45% 28% at -5% 95%, rgba(138,255,100,0.04) 0%, transparent 50%); }
+  nav { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 62px; background: rgba(9,9,9,0.88); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border); }
+  .logo { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; text-decoration: none; color: var(--text); }
+  .logo span { color: var(--green); }
+  .wrap { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
 
+  /* FORM */
+  .section-title { font-size: 10px; font-weight: 800; color: var(--green); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 16px; }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 16px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 11px; font-weight: 700; color: #666; letter-spacing: 0.08em; text-transform: uppercase; }
+  .fi { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); color: var(--text);
+    border-radius: 9px; padding: 12px 14px; font-size: 14px; font-family: 'Outfit', sans-serif;
+    outline: none; transition: border-color 0.2s; width: 100%; appearance: none; -webkit-appearance: none; }
+  .fi:focus { border-color: rgba(138,255,100,0.4); }
+  .fi option { background: #111; }
+  .hint { font-size: 11px; color: #3a3a3a; }
+  .btn-submit { width: 100%; background: linear-gradient(135deg,#8aff64,#4dc840); border: none; color: #090909;
+    border-radius: 11px; padding: 16px; font-size: 16px; font-family: 'Syne', sans-serif;
+    font-weight: 800; cursor: pointer; transition: all 0.2s; letter-spacing: -0.01em;
+    box-shadow: 0 8px 28px rgba(138,255,100,0.2); }
+  .btn-submit:disabled { background: rgba(255,255,255,0.06); color: #333; cursor: not-allowed; box-shadow: none; }
+
+  /* LOADING */
+  .loading { text-align: center; padding: 80px 24px; display: none; }
+  .dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 28px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); animation: dot 1.2s ease-in-out infinite; opacity: 0.3; }
+  @keyframes dot { 0%,80%,100%{transform:translateY(0);opacity:0.3} 40%{transform:translateY(-12px);opacity:1} }
+  .loading h3 { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 10px; }
+  .loading-msg { color: var(--green); font-size: 14px; font-weight: 600; min-height: 22px; }
+
+  /* RESULTS */
+  .results { display: none; }
+  .verdict-card { border-radius: 16px; padding: 28px; margin-bottom: 16px; position: relative; overflow: hidden; }
+  .verdict-badge { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.12em;
+    padding: 3px 10px; border-radius: 4px; text-transform: uppercase; margin-bottom: 12px; color: #090909; }
+  .verdict-headline { font-family: 'Syne', sans-serif; font-size: clamp(18px,3.5vw,26px); font-weight: 800;
+    letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 10px; }
+  .verdict-detail { font-size: 14px; color: #999; line-height: 1.7; }
+
+  .numbers { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+  .num-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 13px; padding: 18px; }
+  .num-card.highlight { background: rgba(138,255,100,0.07); border-color: rgba(138,255,100,0.22); }
+  .num-label { font-size: 10px; color: #555; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .num-val { font-family: 'DM Mono', monospace; font-size: clamp(16px,2.5vw,24px); font-weight: 500; line-height: 1; margin-bottom: 5px; }
+  .num-sub { font-size: 11px; color: #3a3a3a; }
+
+  .bench { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .bench-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 13px; padding: 16px 18px; }
+  .bench-label { font-size: 10px; color: #555; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .bench-val { font-size: 13px; color: var(--green); font-weight: 700; margin-bottom: 4px; }
+
+  /* TABS */
+  .tabs { border-bottom: 1px solid var(--border); display: flex; gap: 2px; overflow-x: auto; margin-bottom: 20px; }
+  .tab { background: none; border: none; border-bottom: 2px solid transparent; color: #555;
+    padding: 9px 16px 11px; font-size: 13px; font-family: 'Outfit', sans-serif;
+    font-weight: 400; cursor: pointer; transition: all 0.15s; white-space: nowrap; margin-bottom: -1px; }
+  .tab.active { border-bottom-color: var(--green); color: #fff; font-weight: 700; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* EXTRAS */
+  .extra-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 20px; display: grid; grid-template-columns: 1fr auto; gap: 16px;
+    align-items: center; margin-bottom: 10px; }
+  .extra-name { font-weight: 700; color: #fff; font-size: 14px; margin-bottom: 3px; }
+  .extra-why { font-size: 12px; color: #555; line-height: 1.5; }
+  .extra-amount { font-family: 'DM Mono', monospace; font-size: 24px; color: var(--green); white-space: nowrap; }
+  .extras-total { background: rgba(138,255,100,0.06); border: 1px solid rgba(138,255,100,0.2);
+    border-radius: 12px; padding: 14px 20px; display: flex; justify-content: space-between;
+    align-items: center; margin-top: 4px; }
+  .extras-total span:first-child { font-weight: 700; color: #fff; font-size: 14px; }
+  .extras-total span:last-child { font-family: 'DM Mono', monospace; font-size: 26px; color: var(--green); }
+
+  /* FLAGS */
+  .flag-item { background: var(--bg2); border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; }
+  .flag-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .flag-sev { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; padding: 2px 9px; border-radius: 4px; text-transform: uppercase; }
+  .flag-name { font-weight: 700; color: #fff; font-size: 14px; }
+  .flag-advice { font-size: 13px; color: #777; line-height: 1.6; }
+
+  /* EMAIL */
+  .email-box { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px 28px; font-size: 14px; line-height: 1.9; color: #ccc; font-family: 'Outfit', sans-serif;
+    white-space: pre-wrap; }
+  .copy-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .copy-row p { font-size: 13px; color: #555; }
+  .btn-copy { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); color: #888;
+    border-radius: 7px; padding: 7px 15px; font-size: 12px; font-family: 'Outfit', sans-serif;
+    font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .btn-copy.done { background: rgba(138,255,100,0.15); border-color: rgba(138,255,100,0.35); color: var(--green); }
+
+  /* SCRIPTS */
+  .script-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; margin-bottom: 12px; }
+  .script-header { background: rgba(255,255,255,0.03); padding: 10px 18px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; }
+  .script-scenario { font-size: 12px; font-weight: 700; color: #666; }
+  .script-response { padding: 16px 18px; font-size: 14px; color: var(--green); line-height: 1.75; font-style: italic; }
+
+  .btn-reset { width: 100%; background: none; border: 1px solid var(--border); color: #555;
+    border-radius: 9px; padding: 12px; font-size: 13px; font-family: 'Outfit', sans-serif; cursor: pointer; margin-top: 24px; }
+
+  @media(max-width:600px){
+    .grid2 { grid-template-columns: 1fr; }
+    .numbers { grid-template-columns: 1fr; }
+    .bench { grid-template-columns: 1fr; }
+    nav { padding: 0 20px; }
+    .wrap { padding: 32px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="ambient"></div>
+<nav>
+  <a class="logo" href="/">Negoti<span>Rate</span></a>
+  <span style="font-size:12px;color:#3a3a3a">Full Report</span>
+</nav>
+
+<div class="wrap">
+  <div style="margin-bottom:32px">
+    <div style="font-size:10px;font-weight:800;color:var(--green);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:10px">⚡ You're unlocked — full report</div>
+    <h1 style="font-family:'Syne',sans-serif;font-size:clamp(28px,5vw,44px);font-weight:800;line-height:1;letter-spacing:-0.02em;color:#fff;margin-bottom:10px">Enter your stats.<br>Get everything.</h1>
+    <p style="font-size:15px;color:#555;line-height:1.7">Your exact rate range, counter-offer email, negotiation scripts, red flag scanner, and extras pricing — all generated from your real numbers.</p>
+  </div>
+
+  <!-- FORM -->
+  <div id="form-section">
+    <div class="card">
+      <div class="section-title">① Your Channel</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Platform</label>
+          <select id="platform" class="fi">
+            <option value="" disabled selected>Select…</option>
+            <option>TikTok</option><option>Instagram Reels</option><option>Instagram Feed</option>
+            <option>YouTube</option><option>Twitter/X</option><option>Twitch</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Niche</label>
+          <select id="niche" class="fi">
+            <option value="" disabled selected>Select…</option>
+            <option>Beauty & Skincare</option><option>Fashion & Style</option><option>Fitness & Health</option>
+            <option>Gaming</option><option>Finance & Investing</option><option>Tech & Gadgets</option>
+            <option>Food & Cooking</option><option>Travel</option><option>Lifestyle</option>
+            <option>Entertainment & Comedy</option><option>Parenting</option><option>Education</option>
+            <option>Sports</option><option>Music</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Followers</label>
+          <input id="followers" class="fi" type="number" placeholder="e.g. 24500"/>
+          <span class="hint">Total follower count</span>
+        </div>
+        <div class="field">
+          <label>Avg Views Per Post</label>
+          <input id="views" class="fi" type="number" placeholder="e.g. 41000"/>
+          <span class="hint">30-day average</span>
+        </div>
+        <div class="field">
+          <label>Engagement Rate %</label>
+          <input id="engagement" class="fi" type="number" placeholder="e.g. 6.8" step="0.1"/>
+          <span class="hint">(Likes+Comments)÷Followers×100</span>
+        </div>
+        <div class="field">
+          <label>What They're Asking For</label>
+          <select id="deliverable" class="fi">
+            <option value="" disabled selected>Select…</option>
+            <option>Single video/reel</option><option>2 videos/reels</option><option>3+ videos/reels</option>
+            <option>Story only</option><option>Video + Stories</option><option>Dedicated video</option>
+            <option>Integration/mention</option><option>Full campaign</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">② Their Offer</div>
+      <p style="font-size:11px;color:#444;margin-bottom:16px">Optional but strongly recommended — the more detail, the sharper the report</p>
+      <div class="grid2" style="margin-bottom:14px">
+        <div class="field">
+          <label>What They Offered (£)</label>
+          <input id="offer" class="fi" type="number" placeholder="e.g. 180"/>
+          <span class="hint">Leave blank if no offer yet</span>
+        </div>
+        <div class="field">
+          <label>Exclusivity / Usage Terms</label>
+          <input id="exclusivity" class="fi" type="text" placeholder="e.g. 60-day exclusivity"/>
+          <span class="hint">From their brief if mentioned</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Paste Their Brief or Add Context</label>
+        <textarea id="brief" class="fi" rows="4" placeholder="Paste the brand brief, timeline, deliverables, or anything relevant…" style="resize:vertical;line-height:1.7"></textarea>
+        <span class="hint">More context = sharper report</span>
+      </div>
+    </div>
+
+    <div id="form-error" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:12px 16px;color:#f87171;font-size:13px;margin-bottom:16px"></div>
+    <button class="btn-submit" id="submit-btn" onclick="generateReport()">Generate My Full Report →</button>
+    <p style="text-align:center;font-size:11px;color:#3a3a3a;margin-top:8px">Takes about 15 seconds · Powered by live AI</p>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading" id="loading-section">
+    <div class="dots">
+      <div class="dot"></div>
+      <div class="dot" style="animation-delay:0.15s"></div>
+      <div class="dot" style="animation-delay:0.3s"></div>
+      <div class="dot" style="animation-delay:0.45s"></div>
+      <div class="dot" style="animation-delay:0.6s"></div>
+    </div>
+    <h3>Building your report…</h3>
+    <p class="loading-msg" id="loading-msg">Analysing your engagement rate…</p>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results-section">
+
+    <!-- VERDICT -->
+    <div class="verdict-card" id="verdict-card">
+      <div class="verdict-badge" id="verdict-badge"></div>
+      <div class="verdict-headline" id="verdict-headline"></div>
+      <div class="verdict-detail" id="verdict-detail"></div>
+    </div>
+
+    <!-- NUMBERS -->
+    <div class="numbers">
+      <div class="num-card">
+        <div class="num-label">Rate Range</div>
+        <div class="num-val" id="num-range"></div>
+        <div class="num-sub">Fair market value</div>
+      </div>
+      <div class="num-card highlight">
+        <div class="num-label">Recommended Ask</div>
+        <div class="num-val" id="num-rec" style="color:var(--green)"></div>
+        <div class="num-sub">Lead with this</div>
+      </div>
+      <div class="num-card" id="num-offer-card">
+        <div class="num-label">Brand Offered</div>
+        <div class="num-val" id="num-offer"></div>
+        <div class="num-sub" id="num-gap"></div>
+      </div>
+    </div>
+
+    <!-- BENCHMARKS + BULLETS -->
+    <div class="bench">
+      <div class="bench-card">
+        <div class="bench-label">Engagement Benchmark</div>
+        <div class="bench-val" id="bench-eng"></div>
+        <div style="font-size:12px;color:#3a3a3a" id="bench-eng-sub"></div>
+      </div>
+      <div class="bench-card">
+        <div class="bench-label">Key Insights</div>
+        <div id="bullets"></div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('extras')">Extras & Add-ons</button>
+      <button class="tab" onclick="switchTab('flags')">Red Flags</button>
+      <button class="tab" onclick="switchTab('email')">Counter-Offer Email</button>
+      <button class="tab" onclick="switchTab('scripts')">Negotiation Scripts</button>
+    </div>
+
+    <div class="tab-content active" id="tab-extras">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">Add these on top of your base rate. Always invoice them separately.</p>
+      <div id="extras-list"></div>
+      <div class="extras-total">
+        <span>Total with all extras</span>
+        <span id="extras-total-val"></span>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-flags">
+      <div id="flags-list"></div>
+    </div>
+
+    <div class="tab-content" id="tab-email">
+      <div class="copy-row">
+        <p>Edit [BRAND NAME] and [YOUR NAME], then send.</p>
+        <button class="btn-copy" id="email-copy-btn" onclick="copyEmail()">⎘ Copy</button>
+      </div>
+      <div class="email-box" id="email-body"></div>
+    </div>
+
+    <div class="tab-content" id="tab-scripts">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">Exact words for every pushback. Use verbatim or adapt to your voice.</p>
+      <div id="scripts-list"></div>
+    </div>
+
+    <button class="btn-reset" onclick="resetForm()">← Run another report</button>
+  </div>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `You are NegotiRate, the world's most accurate brand deal rate calculator for content creators.
+Analyse the creator's stats and brand offer, return a detailed honest report.
+RESPOND ONLY WITH VALID JSON. No markdown fences, no explanation. Raw JSON only.
+
+{
+  "rate_low": 320,
+  "rate_high": 580,
+  "rate_recommended": 450,
+  "underpaid_low": 140,
+  "underpaid_high": 400,
+  "underpaid_pct": 57,
+  "verdict": "lowball",
+  "verdict_headline": "One punchy sentence",
+  "verdict_detail": "2-3 sentences with specific reasoning",
+  "engagement_benchmark": "e.g. 2.1x the beauty niche average of 3.2%",
+  "offer_gap": "e.g. £230 below fair value",
+  "extras": [
+    { "name": "Exclusivity (30 days)", "add": 80, "explanation": "One sentence why" },
+    { "name": "Usage rights (6 months)", "add": 120, "explanation": "One sentence why" },
+    { "name": "Rush fee (under 7 days)", "add": 60, "explanation": "One sentence why" }
+  ],
+  "red_flags": [
+    { "flag": "Short description", "severity": "low", "advice": "What to do" }
+  ],
+  "counter_email": "Full 150-200 word counter-offer email. Use [BRAND NAME] and [YOUR NAME].",
+  "negotiation_scripts": [
+    { "scenario": "They say the budget is fixed", "response": "Exact words to use" },
+    { "scenario": "They push back on your rate", "response": "Exact words to use" },
+    { "scenario": "They ask for more deliverables at same price", "response": "Exact words to use" },
+    { "scenario": "They go silent after your counter", "response": "Exact words to use" }
+  ],
+  "summary_bullets": ["Insight 1", "Insight 2", "Insight 3"]
+}
+
+Rate calculation:
+- TikTok CPM: £15-35/1000 views | Instagram Reels: £18-40 | YouTube: £25-60 | Instagram Feed: £12-28/1000 followers
+- Engagement: <2%=0.7x | 2-4%=1x | 4-7%=1.4x | 7%+=1.8x
+- Niche: Finance/Tech=1.5x | Fitness=1.3x | Beauty/Fashion=1.2x | Gaming=1.1x | Lifestyle=1.0x | Entertainment=0.9x
+- verdict options: lowball / fair / strong / walkaway / no_offer`;
+
+const LOAD_MSGS = [
+  "Analysing your engagement rate…",
+  "Benchmarking against your niche…",
+  "Calculating your market rate…",
+  "Scanning brief for red flags…",
+  "Writing your counter-offer email…",
+  "Preparing negotiation scripts…",
+  "Finalising your full report…"
+];
+
+function fmt(n){ return '£' + Math.round(n).toLocaleString(); }
+
+let msgTimer = null, msgIdx = 0;
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['extras','flags','email','scripts'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function copyEmail() {
+  const text = document.getElementById('email-body').textContent;
+  navigator.clipboard.writeText(text);
+  const btn = document.getElementById('email-copy-btn');
+  btn.textContent = '✓ Copied'; btn.classList.add('done');
+  setTimeout(() => { btn.textContent = '⎘ Copy'; btn.classList.remove('done'); }, 2000);
+}
+
+function copyScript(id) {
+  const el = document.getElementById(id);
+  navigator.clipboard.writeText(el.textContent.replace(/^"|"$/g,''));
+  const btn = el.parentElement.querySelector('.btn-copy');
+  btn.textContent = '✓ Copied'; btn.classList.add('done');
+  setTimeout(() => { btn.textContent = '⎘ Copy'; btn.classList.remove('done'); }, 2000);
+}
+
+function resetForm() {
+  document.getElementById('form-section').style.display = 'block';
+  document.getElementById('results-section').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function generateReport() {
+  const platform    = document.getElementById('platform').value;
+  const niche       = document.getElementById('niche').value;
+  const followers   = document.getElementById('followers').value;
+  const views       = document.getElementById('views').value;
+  const engagement  = document.getElementById('engagement').value;
+  const deliverable = document.getElementById('deliverable').value;
+  const offer       = document.getElementById('offer').value;
+  const exclusivity = document.getElementById('exclusivity').value;
+  const brief       = document.getElementById('brief').value;
+  const errEl       = document.getElementById('form-error');
+  errEl.style.display = 'none';
+
+  if (!platform || !niche || !followers || !engagement) {
+    errEl.textContent = 'Please fill in platform, niche, followers, and engagement rate.';
+    errEl.style.display = 'block'; return;
+  }
+
+  document.getElementById('form-section').style.display = 'none';
+  document.getElementById('loading-section').style.display = 'block';
+  msgIdx = 0;
+  document.getElementById('loading-msg').textContent = LOAD_MSGS[0];
+  msgTimer = setInterval(() => {
+    msgIdx = Math.min(msgIdx + 1, LOAD_MSGS.length - 1);
+    document.getElementById('loading-msg').textContent = LOAD_MSGS[msgIdx];
+  }, 1800);
+
+  const userMsg = `Creator stats:
+Platform: ${platform}
+Niche: ${niche}
+Followers: ${followers}
+Avg views: ${views || 'not provided'}
+Engagement rate: ${engagement}%
+Deliverable: ${deliverable || 'not specified'}
+Brand offer: ${offer ? '£' + offer : 'not provided'}
+Exclusivity/terms: ${exclusivity || 'none mentioned'}
+Brief/context: ${brief || 'none provided'}
+
+Generate the full report JSON.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 3000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userMsg }]
+      })
+    });
+    if (!res.ok) throw new Error('API ' + res.status);
+    const data = await res.json();
+    const raw = data.content.map(b => b.text || '').join('').trim()
+      .replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+    const r = JSON.parse(raw);
+    clearInterval(msgTimer);
+    document.getElementById('loading-section').style.display = 'none';
+    renderResults(r, offer, engagement);
+  } catch(err) {
+    clearInterval(msgTimer);
+    document.getElementById('loading-section').style.display = 'none';
+    document.getElementById('form-section').style.display = 'block';
+    errEl.textContent = 'Something went wrong — please try again.';
+    errEl.style.display = 'block';
+  }
+}
+
+function renderResults(r, offer, eng) {
+  const vc = {
+    lowball:  { label:'LOWBALL',   color:'#ef4444', bg:'rgba(239,68,68,0.07)',   border:'rgba(239,68,68,0.22)' },
+    fair:     { label:'FAIR',      color:'#f59e0b', bg:'rgba(245,158,11,0.07)',  border:'rgba(245,158,11,0.22)' },
+    strong:   { label:'STRONG',    color:'#8aff64', bg:'rgba(138,255,100,0.07)', border:'rgba(138,255,100,0.22)' },
+    walkaway: { label:'WALK AWAY', color:'#ef4444', bg:'rgba(239,68,68,0.06)',   border:'rgba(239,68,68,0.18)' },
+    no_offer: { label:'RATE READY',color:'#8aff64', bg:'rgba(138,255,100,0.06)', border:'rgba(138,255,100,0.18)' },
+  }[r.verdict] || { label:'FAIR', color:'#f59e0b', bg:'rgba(245,158,11,0.07)', border:'rgba(245,158,11,0.22)' };
+
+  const vc_card = document.getElementById('verdict-card');
+  vc_card.style.background = vc.bg;
+  vc_card.style.border = '1px solid ' + vc.border;
+
+  const badge = document.getElementById('verdict-badge');
+  badge.textContent = vc.label;
+  badge.style.background = vc.color;
+
+  document.getElementById('verdict-headline').style.color = vc.color;
+  document.getElementById('verdict-headline').textContent = r.verdict_headline;
+  document.getElementById('verdict-detail').textContent = r.verdict_detail;
+
+  document.getElementById('num-range').textContent = fmt(r.rate_low) + ' – ' + fmt(r.rate_high);
+  document.getElementById('num-rec').textContent = fmt(r.rate_recommended);
+
+  const offerCard = document.getElementById('num-offer-card');
+  if (offer && parseFloat(offer) > 0) {
+    document.getElementById('num-offer').textContent = fmt(parseFloat(offer));
+    document.getElementById('num-offer').style.color = parseFloat(offer) < r.rate_low ? '#ef4444' : '#8aff64';
+    document.getElementById('num-gap').textContent = r.offer_gap;
+  } else {
+    document.getElementById('num-offer').textContent = 'None given';
+    document.getElementById('num-offer').style.color = '#555';
+    document.getElementById('num-gap').textContent = 'Enter an offer for gap analysis';
+  }
+
+  document.getElementById('bench-eng').textContent = r.engagement_benchmark;
+  document.getElementById('bench-eng-sub').textContent = eng + '% entered';
+
+  const bullets = document.getElementById('bullets');
+  bullets.innerHTML = (r.summary_bullets || []).map(b =>
+    `<div style="display:flex;gap:8px;font-size:12px;color:#aaa;margin-bottom:5px;align-items:flex-start"><span style="color:var(--green);flex-shrink:0">▸</span>${b}</div>`
+  ).join('');
+
+  // Extras
+  const extrasList = document.getElementById('extras-list');
+  extrasList.innerHTML = (r.extras || []).map(e => `
+    <div class="extra-item">
+      <div><div class="extra-name">${e.name}</div><div class="extra-why">${e.explanation}</div></div>
+      <div class="extra-amount">+${fmt(e.add)}</div>
+    </div>`).join('');
+  const totalExtras = (r.extras || []).reduce((s,e) => s + e.add, 0);
+  document.getElementById('extras-total-val').textContent = fmt(r.rate_recommended + totalExtras);
+
+  // Red flags
+  const flagsList = document.getElementById('flags-list');
+  const sevColor = { low:'#f59e0b', medium:'#f97316', high:'#ef4444' };
+  if (!r.red_flags || r.red_flags.length === 0) {
+    flagsList.innerHTML = '<div style="text-align:center;padding:40px;color:#555"><div style="font-size:32px;margin-bottom:10px">✅</div><div>No significant red flags detected.</div></div>';
+  } else {
+    flagsList.innerHTML = r.red_flags.map(f => `
+      <div class="flag-item" style="border:1px solid ${sevColor[f.severity]}33">
+        <div class="flag-header">
+          <span class="flag-sev" style="background:${sevColor[f.severity]}22;color:${sevColor[f.severity]}">${f.severity}</span>
+          <span class="flag-name">${f.flag}</span>
+        </div>
+        <div class="flag-advice">${f.advice}</div>
+      </div>`).join('');
+  }
+
+  // Email
+  document.getElementById('email-body').textContent = r.counter_email;
+
+  // Scripts
+  const scriptsList = document.getElementById('scripts-list');
+  scriptsList.innerHTML = (r.negotiation_scripts || []).map((s, i) => `
+    <div class="script-item">
+      <div class="script-header">
+        <span class="script-scenario">💬 ${s.scenario}</span>
+        <button class="btn-copy" onclick="copyScript('script-${i}')">⎘ Copy</button>
+      </div>
+      <div class="script-response" id="script-${i}">"${s.response}"</div>
+    </div>`).join('');
+
+  document.getElementById('results-section').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
