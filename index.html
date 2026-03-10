@@ -787,7 +787,7 @@ Respond ONLY with raw JSON, no markdown:
     try {
       const res = await fetch('/api/analyze', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:400, messages:[{role:'user',content:PROMPT}] })
+        body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:400, messages:[{role:'user',content:PROMPT}], emailData:{userEmail:email, platform, niche, followers, offer} })
       });
       if(!res.ok) throw new Error('API '+res.status);
       const data = await res.json();
