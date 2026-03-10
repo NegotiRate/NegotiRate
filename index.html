@@ -442,7 +442,7 @@
 
       <!-- LOCKED TEASER -->
       <div style="background:rgba(138,255,100,0.04);border:1px solid rgba(138,255,100,0.15);border-radius:14px;padding:24px;margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px">🔒 Unlock your full report — £9.99</div>
+        <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px">🔒 Unlock your full report — £25</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
           <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px;filter:blur(3px)">
             <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Your Exact Rate</div>
@@ -459,9 +459,9 @@
           <span style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:5px 12px;font-size:12px;color:#444">➕ Extras pricing</span>
         </div>
         <button onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})" style="width:100%;background:linear-gradient(135deg,#8aff64,#4dc840);border:none;color:#090909;border-radius:10px;padding:14px;font-size:15px;font-weight:800;font-family:'Outfit',sans-serif;cursor:pointer">
-          Unlock Full Report — £9.99
+          Unlock Full Report — £25
         </button>
-        <p style="text-align:center;font-size:11px;color:#3a3a3a;margin-top:8px">Or £19.99/mo for unlimited · £149 lifetime deal</p>
+        <p style="text-align:center;font-size:11px;color:#3a3a3a;margin-top:8px">Or £20/mo for unlimited · Lifetime sold out</p>
       </div>
 
       <button onclick="resetCalc()" style="width:100%;background:none;border:1px solid rgba(255,255,255,0.08);color:#555;border-radius:9px;padding:11px;font-size:13px;font-family:'Outfit',sans-serif;cursor:pointer">
@@ -623,7 +623,7 @@
     <!-- LIFETIME SOLD OUT BAR -->
     <div style="max-width:960px;margin:0 auto;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:20px 28px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-        <span style="font-size:13px;font-weight:700;color:#2a2a2a;text-decoration:line-through">Lifetime Access — £149</span>
+        <span style="font-size:13px;font-weight:700;color:#2a2a2a;text-decoration:line-through">Lifetime Access — Sold Out</span>
         <span style="background:rgba(239,68,68,0.1);color:#ef4444;font-size:10px;font-weight:800;letter-spacing:0.1em;padding:3px 10px;border-radius:4px;text-transform:uppercase">Sold Out</span>
         <span style="font-size:13px;color:#444">Lifetime spots are gone. Get notified if we release more.</span>
       </div>
@@ -807,14 +807,26 @@
       document.getElementById('calc-loading-msg').textContent = LOAD_MSGS[msgIdx];
     }, 1400);
 
-    const PROMPT = `You are a precise brand deal rate calculator for content creators worldwide.
-Calculate fair market rate and underpayment based on these benchmarks (adjust for local market if currency indicates non-UK):
-- TikTok CPM: 15-35/1000 views | Instagram Reels: 18-40/1000 views | YouTube: 25-60/1000 views | Instagram Feed: 12-28/1000 followers
-- Engagement multipliers: under 2% = 0.7x | 2-4% = 1x | 4-7% = 1.4x | 7%+ = 1.8x
-- Niche multipliers: Finance/Tech = 1.5x | Fitness = 1.3x | Beauty/Fashion = 1.2x | Gaming = 1.1x | Lifestyle = 1.0x | Entertainment = 0.9x
-- Currency: ${currency} (${currencyCode}) — return all monetary values in this currency
+    const PROMPT = `You are a precise brand deal rate calculator. Calculate a TIGHT, specific rate range — not a broad estimate.
 
-Creator: Platform: ${platform}, Niche: ${niche}, Followers: ${followers}, Avg views: ${views||'not provided'}, Engagement: ${eng}%, Brand offer: ${offer?currency+offer:'not provided'}
+STEP 1: Calculate base rate using EXACT formula:
+- TikTok: avg_views × CPM/1000 (CPM = 22 for <50k views, 28 for 50k-200k, 32 for 200k+)
+- Instagram Reels: avg_views × CPM/1000 (CPM = 25 for <50k, 32 for 50k-200k, 38 for 200k+)
+- Instagram Feed: followers × 0.018 (flat rate per follower)
+- YouTube integration: avg_views × CPM/1000 (CPM = 30 for <50k, 40 for 50k-200k, 52 for 200k+)
+- If no views provided, estimate: followers × 0.12 for TikTok, followers × 0.08 for Instagram
+
+STEP 2: Apply engagement multiplier to base rate:
+- Under 2%: × 0.75 | 2-4%: × 1.0 | 4-7%: × 1.35 | 7%+: × 1.7
+
+STEP 3: Apply niche multiplier:
+- Finance/Tech: × 1.5 | Fitness/Health: × 1.3 | Beauty/Fashion: × 1.2 | Gaming: × 1.1 | Lifestyle: × 1.0 | Entertainment: × 0.9
+
+STEP 4: The result is your RECOMMENDED rate. Set rate_low = recommended × 0.85, rate_high = recommended × 1.15. This MUST be a tight ±15% band — never wider.
+
+STEP 5: Currency adjustment — if ${currencyCode} is USD multiply all GBP values by 1.27, AUD by 1.95, CAD by 1.73, EUR by 1.17.
+
+Creator: Platform: ${platform}, Niche: ${niche}, Followers: ${followers}, Avg views: ${views||'not provided'}, Engagement: ${eng}%, Brand offer: ${offer ? currency+offer : 'not provided'}
 
 Respond ONLY with raw JSON, no markdown:
 {"rate_low":number,"rate_high":number,"rate_recommended":number,"underpaid_pct":number,"underpaid_amount_low":number,"underpaid_amount_high":number,"verdict":"lowball"|"fair"|"strong"|"no_offer","one_line":"one sharp sentence about this deal"}`;
