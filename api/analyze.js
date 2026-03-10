@@ -24,7 +24,7 @@ export default async function handler(req, res) {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01'
       },
-      body: JSON.stringify(req.body)
+      body: JSON.stringify({ model: req.body.model, max_tokens: req.body.max_tokens, messages: req.body.messages })
     });
 
     const data = await response.json();
