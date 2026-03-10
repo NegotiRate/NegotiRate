@@ -17,6 +17,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Call Anthropic API
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -34,6 +35,7 @@ export default async function handler(req, res) {
       return res.status(response.status).json({ error: data?.error?.message || 'Anthropic API error', details: data });
     }
 
+    // Try to send email if we have the user's email and results
     const { userEmail, platform, niche, followers, offer } = req.body.emailData || {};
 
     if (userEmail && process.env.RESEND_API_KEY) {
@@ -96,6 +98,7 @@ export default async function handler(req, res) {
         });
       } catch (emailErr) {
         console.error('Email send failed:', emailErr.message);
+        // Don't fail the whole request if email fails
       }
     }
 
