@@ -833,7 +833,7 @@ Respond ONLY with raw JSON, no markdown:
       submitEmail(email, platform, niche, followers, eng, offer, Math.round(r.underpaid_pct), gapStr);
       clearInterval(msgTimer);
       document.getElementById('calc-loading').style.display = 'none';
-      showResult(r, offer);
+      showResult(r, offer, currency);
     } catch(err) {
       clearInterval(msgTimer);
       document.getElementById('calc-loading').style.display = 'none';
@@ -843,7 +843,7 @@ Respond ONLY with raw JSON, no markdown:
     }
   }
 
-  function showResult(r, offer) {
+  function showResult(r, offer, currency) {
     const box   = document.getElementById('res-lowball');
     const pctEl = document.getElementById('res-pct');
     const gapEl = document.getElementById('res-gap');
