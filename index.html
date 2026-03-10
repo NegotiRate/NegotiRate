@@ -42,8 +42,10 @@
     background: rgba(9,9,9,0.88); backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border);
   }
-  .logo { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
-  .logo .r { color: var(--green); }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; cursor: pointer; }
+  .logo-icon { width: 28px; height: 28px; flex-shrink: 0; }
+  .logo-text { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
+  .logo-text .r { color: var(--green); }
   .nav-links { display: flex; align-items: center; gap: 28px; }
   .nav-links a { color: var(--muted); font-size: 14px; font-weight: 500; text-decoration: none; transition: color 0.2s; }
   .nav-links a:hover { color: var(--text); }
@@ -270,7 +272,14 @@
 
 <!-- NAV -->
 <nav>
-  <div class="logo">Negoti<span class="r">Rate</span></div>
+  <div class="logo">
+    <svg class="logo-icon" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="96" y="358" width="58" height="140" rx="12" fill="#8aff64" opacity="0.4" transform="rotate(180 125 358)"/>
+      <rect x="221" y="358" width="58" height="210" rx="12" fill="#8aff64" opacity="0.7" transform="rotate(180 250 358)"/>
+      <rect x="346" y="358" width="58" height="286" rx="12" fill="#8aff64" transform="rotate(180 375 358)"/>
+    </svg>
+    <span class="logo-text">Negoti<span class="r">R</span>ate</span>
+  </div>
   <div class="nav-links">
     <a href="#how">How it works</a>
     <a href="#features">Features</a>
@@ -661,7 +670,14 @@
 
 <!-- FOOTER -->
 <footer>
-  <div class="logo">Negoti<span class="r">Rate</span></div>
+  <div class="logo">
+    <svg class="logo-icon" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="96" y="358" width="58" height="140" rx="12" fill="#8aff64" opacity="0.4" transform="rotate(180 125 358)"/>
+      <rect x="221" y="358" width="58" height="210" rx="12" fill="#8aff64" opacity="0.7" transform="rotate(180 250 358)"/>
+      <rect x="346" y="358" width="58" height="286" rx="12" fill="#8aff64" transform="rotate(180 375 358)"/>
+    </svg>
+    <span class="logo-text">Negoti<span class="r">R</span>ate</span>
+  </div>
   <div>Built for creators who are done getting lowballed.</div>
   <div style="display:flex;gap:20px">
     <a href="#">Privacy</a>
