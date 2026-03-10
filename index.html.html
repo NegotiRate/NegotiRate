@@ -785,7 +785,7 @@ Respond ONLY with raw JSON, no markdown:
 {"rate_low":number,"rate_high":number,"rate_recommended":number,"underpaid_pct":number,"underpaid_amount_low":number,"underpaid_amount_high":number,"verdict":"lowball"|"fair"|"strong"|"no_offer","one_line":"one sharp sentence about this deal"}`;
 
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('/api/analyze', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:400, messages:[{role:'user',content:PROMPT}] })
       });
