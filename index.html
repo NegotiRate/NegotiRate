@@ -353,6 +353,16 @@
     <p class="ss fu" style="margin-bottom:32px">Enter your real stats and what the brand offered. We'll calculate exactly how much you're being underpaid — free, using live AI analysis.</p>
 
     <div id="calc-form">
+      <div style="margin-bottom:12px;">
+        <label class="ci-label">Your Currency</label>
+        <select id="c-currency" class="ci" style="max-width:240px" onchange="updateCurrencySymbol()">
+          <option value="£" data-code="GBP">🇬🇧 GBP — British Pound (£)</option>
+          <option value="$" data-code="USD">🇺🇸 USD — US Dollar ($)</option>
+          <option value="$" data-code="AUD">🇦🇺 AUD — Australian Dollar ($)</option>
+          <option value="$" data-code="CAD">🇨🇦 CAD — Canadian Dollar ($)</option>
+          <option value="€" data-code="EUR">🇪🇺 EUR — Euro (€)</option>
+        </select>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div class="ci-wrap">
           <label class="ci-label">Platform</label>
@@ -385,7 +395,7 @@
           <input id="c-eng" class="ci" type="number" placeholder="e.g. 6.8" step="0.1"/>
         </div>
         <div class="ci-wrap">
-          <label class="ci-label">Brand's Offer (£)</label>
+          <label class="ci-label">Brand's Offer (<span id="currency-label">£</span>)</label>
           <input id="c-offer" class="ci" type="number" placeholder="e.g. 180"/>
         </div>
       </div>
@@ -494,7 +504,7 @@
     <p class="ss fu">Brands know what fair rates look like. Most creators don't. That's not an accident.</p>
     <div class="pg">
       <div class="pc fu"><div class="picon">😤</div><h3>You're guessing your rate</h3><p>Generic calculators give ballpark numbers with zero context. They don't know your niche, your engagement, or what that brand actually budgeted.</p><div class="pstat">76%<span>of creators undercharge on their first brand deal</span></div></div>
-      <div class="pc fu"><div class="picon">📩</div><h3>You don't know how to negotiate</h3><p>Brands lowball and wait. Most creators accept it because they have no counter-offer ready and don't want to seem difficult.</p><div class="pstat">£800+<span>average left on the table per deal by mid-size creators</span></div></div>
+      <div class="pc fu"><div class="picon">📩</div><h3>You don't know how to negotiate</h3><p>Brands lowball and wait. Most creators accept it because they have no counter-offer ready and don't want to seem difficult.</p><div class="pstat">$1,000+<span>average left on the table per deal by mid-size creators</span></div></div>
       <div class="pc fu"><div class="picon">🚩</div><h3>You miss the expensive extras</h3><p>Exclusivity clauses. Usage rights. Rush fees. Most creators don't know these should cost more — and brands never volunteer to say so.</p><div class="pstat">3×<span>more value hidden in contract extras than the base post fee</span></div></div>
     </div>
   </div>
@@ -744,11 +754,16 @@
       await fetch(FORMSPREE_URL, {
         method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
         body: JSON.stringify({ email, platform, niche, followers, engagement: eng+'%',
-          offer: offer ? '£'+offer : 'not provided',
+          offer: offer ? currency+offer : 'not provided',
           underpaid_pct: pct ? pct+'%' : 'N/A', underpaid_gap: gap||'N/A',
           source:'negotirate.app free calculator', submitted_at: new Date().toISOString() })
       });
     } catch(e) {}
+  }
+
+  function updateCurrencySymbol() {
+    const sym = document.getElementById('c-currency').value;
+    document.getElementById('currency-label').textContent = sym;
   }
 
   async function runCalc() {
@@ -759,6 +774,9 @@
     const eng       = document.getElementById('c-eng').value;
     const offer     = document.getElementById('c-offer').value;
     const email     = document.getElementById('c-email').value.trim();
+    const currencyEl = document.getElementById('c-currency');
+    const currency  = currencyEl.value;
+    const currencyCode = currencyEl.options[currencyEl.selectedIndex].dataset.code || 'GBP';
     const errEl     = document.getElementById('calc-error');
     errEl.style.display = 'none';
 
@@ -789,13 +807,14 @@
       document.getElementById('calc-loading-msg').textContent = LOAD_MSGS[msgIdx];
     }, 1400);
 
-    const PROMPT = `You are a precise brand deal rate calculator for content creators.
-Calculate fair market rate and underpayment based on these benchmarks:
-- TikTok CPM: £15-35/1000 views | Instagram Reels: £18-40/1000 views | YouTube: £25-60/1000 views | Instagram Feed: £12-28/1000 followers
+    const PROMPT = `You are a precise brand deal rate calculator for content creators worldwide.
+Calculate fair market rate and underpayment based on these benchmarks (adjust for local market if currency indicates non-UK):
+- TikTok CPM: 15-35/1000 views | Instagram Reels: 18-40/1000 views | YouTube: 25-60/1000 views | Instagram Feed: 12-28/1000 followers
 - Engagement multipliers: under 2% = 0.7x | 2-4% = 1x | 4-7% = 1.4x | 7%+ = 1.8x
 - Niche multipliers: Finance/Tech = 1.5x | Fitness = 1.3x | Beauty/Fashion = 1.2x | Gaming = 1.1x | Lifestyle = 1.0x | Entertainment = 0.9x
+- Currency: ${currency} (${currencyCode}) — return all monetary values in this currency
 
-Creator: Platform: ${platform}, Niche: ${niche}, Followers: ${followers}, Avg views: ${views||'not provided'}, Engagement: ${eng}%, Brand offer: ${offer?'£'+offer:'not provided'}
+Creator: Platform: ${platform}, Niche: ${niche}, Followers: ${followers}, Avg views: ${views||'not provided'}, Engagement: ${eng}%, Brand offer: ${offer?currency+offer:'not provided'}
 
 Respond ONLY with raw JSON, no markdown:
 {"rate_low":number,"rate_high":number,"rate_recommended":number,"underpaid_pct":number,"underpaid_amount_low":number,"underpaid_amount_high":number,"verdict":"lowball"|"fair"|"strong"|"no_offer","one_line":"one sharp sentence about this deal"}`;
@@ -810,7 +829,7 @@ Respond ONLY with raw JSON, no markdown:
       const raw = data.content.map(b=>b.text||'').join('').trim().replace(/^```json\n?/,'').replace(/\n?```$/,'').trim();
       const r = JSON.parse(raw);
       const gapStr = r.underpaid_amount_low && r.underpaid_amount_high
-        ? '£'+Math.round(r.underpaid_amount_low).toLocaleString()+' – £'+Math.round(r.underpaid_amount_high).toLocaleString() : 'N/A';
+        ? currency+Math.round(r.underpaid_amount_low).toLocaleString()+' – '+currency+Math.round(r.underpaid_amount_high).toLocaleString() : 'N/A';
       submitEmail(email, platform, niche, followers, eng, offer, Math.round(r.underpaid_pct), gapStr);
       clearInterval(msgTimer);
       document.getElementById('calc-loading').style.display = 'none';
@@ -835,14 +854,14 @@ Respond ONLY with raw JSON, no markdown:
       pctEl.style.cssText = 'font-family:Syne,sans-serif;font-size:48px;font-weight:800;color:#8aff64;line-height:1;margin-bottom:8px';
       pctEl.textContent = 'Rate Ready';
       gapEl.style.cssText = 'font-family:DM Mono,monospace;font-size:20px;color:#8aff64;margin-bottom:16px';
-      gapEl.textContent = '£'+r.rate_low.toLocaleString()+' – £'+r.rate_high.toLocaleString();
+      gapEl.textContent = currency+r.rate_low.toLocaleString()+' – '+currency+r.rate_high.toLocaleString();
       hlEl.textContent = r.one_line+' Unlock your full report for the exact rate, counter-offer email, and scripts.';
     } else if(r.verdict==='strong') {
       box.style.cssText = 'background:rgba(138,255,100,0.06);border:1px solid rgba(138,255,100,0.2);border-radius:16px;padding:36px;text-align:center;margin-bottom:16px';
       pctEl.style.cssText = 'font-family:Syne,sans-serif;font-size:48px;font-weight:800;color:#8aff64;line-height:1;margin-bottom:8px';
       pctEl.textContent = 'Strong offer';
       gapEl.style.cssText = 'font-family:DM Mono,monospace;font-size:18px;color:#8aff64;margin-bottom:16px';
-      gapEl.textContent = '£'+r.rate_low.toLocaleString()+' – £'+r.rate_high.toLocaleString()+' fair range';
+      gapEl.textContent = currency+r.rate_low.toLocaleString()+' – '+currency+r.rate_high.toLocaleString()+' fair range';
       hlEl.textContent = r.one_line+' Check the contract terms — exclusivity and usage rights could still cost you.';
     } else {
       const pct = Math.round(r.underpaid_pct);
@@ -852,7 +871,7 @@ Respond ONLY with raw JSON, no markdown:
       pctEl.style.cssText = 'font-family:Syne,sans-serif;font-size:80px;font-weight:800;line-height:1;margin-bottom:8px;background:linear-gradient(135deg,#ff6b6b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent';
       pctEl.textContent = pct+'%';
       gapEl.style.cssText = 'font-family:DM Mono,monospace;font-size:22px;color:#ef4444;font-weight:500;margin-bottom:16px';
-      gapEl.textContent = '£'+low.toLocaleString()+' – £'+high.toLocaleString()+' below fair value';
+      gapEl.textContent = currency+low.toLocaleString()+' – '+currency+high.toLocaleString()+' below fair value';
       hlEl.style.cssText = 'font-size:15px;color:#bbb;line-height:1.6;max-width:460px;margin:0 auto';
       hlEl.textContent = r.one_line+' Unlock your full report to get the counter-offer email and scripts to fix this.';
     }
